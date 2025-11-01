@@ -3,6 +3,8 @@ import json
 import types
 from typing import Callable, Iterable, override
 
+from pyjobshop.protocols import DataclassInstance
+
 _sentinel = object()
 
 
@@ -44,7 +46,7 @@ class AbstractJSONDataclassDecoder(json.JSONDecoder):
     this needs to be handled by a custom subclass.
     """
 
-    serializable_classes: dict[str, type] | None
+    serializable_classes: dict[str, type[DataclassInstance]] | None
     delegate_object_hook: Callable[[object], object] | None = None
 
     def __init__(self, **kwargs):
@@ -68,7 +70,9 @@ class AbstractJSONDataclassDecoder(json.JSONDecoder):
                 f"Invalid type for class name (__class__): "
                 f"expected str, found {type(classname).__name__}"
             )
-        cls: type = self.serializable_classes.get(classname, None)
+        cls: type[DataclassInstance] = self.serializable_classes.get(
+            classname, None
+        )
         if not cls:
             raise TypeError(
                 f"Class {classname} not registered for deserialization."
@@ -99,8 +103,8 @@ class AbstractJSONDataclassDecoder(json.JSONDecoder):
 
 def _build_serializable_classes_dict(
     class_list: Iterable[type],
-) -> dict[str, type]:
-    result: dict[str, type] = {}
+) -> dict[str, type[DataclassInstance]]:
+    result: dict[str, type[DataclassInstance]] = {}
     for cls in class_list:
         if cls.__name__ in result:
             raise ValueError(f"Duplicate name {cls.__name__} in class_list")
