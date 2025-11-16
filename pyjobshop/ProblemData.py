@@ -1,3 +1,4 @@
+import dataclasses
 from collections import Counter, defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field, fields
@@ -5,6 +6,7 @@ from itertools import pairwise
 from typing import Protocol, Sequence, TypeAlias, TypeVar
 
 from pyjobshop.constants import MAX_VALUE
+from pyjobshop.json import decoder_factory
 
 _T = TypeVar("_T")
 
@@ -1165,3 +1167,18 @@ class ProblemData:
         if not (0 <= task < self.num_tasks):
             raise ValueError(f"Invalid task index {task}.")
         return self._task2resources[task]
+
+
+ProblemDataDecoder = decoder_factory(
+    "ProblemDataDecoder",
+    (
+        cls
+        for cls in globals().values()
+        if dataclasses.is_dataclass(cls)
+        and isinstance(cls, type)
+        and cls.__module__ == __name__
+    ),
+)
+"""
+A decoder class to be used with functions from the `json` module, which can
+decode all ``@dataclass``es specified in this module. """
