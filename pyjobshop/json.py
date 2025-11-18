@@ -1,7 +1,9 @@
 import dataclasses
 import json
 import types
-from typing import Callable, Iterable, override
+from typing import Callable, Iterable
+
+from typing_extensions import override
 
 from pyjobshop.protocols import DataclassInstance
 
