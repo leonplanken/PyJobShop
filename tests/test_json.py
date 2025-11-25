@@ -1,10 +1,8 @@
-import json
 
 from numpy.testing import assert_equal
 
 from benchmarks.test_benchmarks import build_lawrence_instance
-from pyjobshop import Model, ProblemData, ProblemDataDecoder
-from pyjobshop.json import JSONDataclassEncoder
+from pyjobshop import Model, ProblemData
 
 
 def test_json():
@@ -22,9 +20,14 @@ def test_json():
 
     # Create the original model data
     pd_orig: ProblemData = model_orig.data()
-    json_str = json.dumps(pd_orig, cls=JSONDataclassEncoder, indent=2)
+    json_str = pd_orig.to_json(indent=2)
+    # json.dumps(pd_orig, cls=JSONDataclassEncoder, indent=2)
 
-    pd_new: ProblemData = json.loads(json_str, cls=ProblemDataDecoder)
+    with open("test-output.json", "w") as f:
+        f.write(json_str + "\n")
+
+    pd_new: ProblemData = ProblemData.from_json(json_str)
+    # pd_new: ProblemData = json.loads(json_str, cls=ProblemDataDecoder)
     model_new = Model.from_data(pd_new)
     result_new = model_new.solve(display=False)
 

@@ -3,7 +3,10 @@ from collections import Counter, defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field, fields
 from itertools import pairwise
-from typing import Protocol, Sequence, TypeAlias, TypeVar
+from typing import Protocol, TypeAlias, TypeVar
+
+import dataclasses_json
+from dataclasses_json import dataclass_json
 
 from pyjobshop.constants import MAX_VALUE
 from pyjobshop.json import decoder_factory
@@ -43,6 +46,7 @@ class CheckBreaksMixin(HasPostInit, Protocol):
                 raise ValueError("Break intervals must not overlap.")
 
 
+@dataclass_json
 @dataclass
 class Job:
     """
@@ -109,6 +113,7 @@ class Job:
         self.tasks.append(idx)
 
 
+@dataclass_json
 @dataclass
 class Machine(CheckBreaksMixin):
     """
@@ -139,6 +144,7 @@ class Machine(CheckBreaksMixin):
     breaks: list[Break] = field(default_factory=list)
     no_idle: bool = False
     name: str = field(default="", kw_only=True)
+    resource_type: str = field(default="Machine", init=False)
 
     def __post_init__(self, *args, **kwargs):
         super().__post_init__(*args, **kwargs)
@@ -147,6 +153,7 @@ class Machine(CheckBreaksMixin):
             raise ValueError("Breaks not allowed with no_idle=True.")
 
 
+@dataclass_json
 @dataclass
 class Renewable(CheckBreaksMixin):
     """
@@ -168,6 +175,7 @@ class Renewable(CheckBreaksMixin):
     capacity: int
     breaks: list[Break] = field(default_factory=list)
     name: str = field(default="", kw_only=True)
+    resource_type: str = field(default="Renewable", init=False)
 
     def __post_init__(self, *args, **kwargs):
         super().__post_init__(*args, **kwargs)
@@ -175,6 +183,7 @@ class Renewable(CheckBreaksMixin):
             raise ValueError("Capacity must be non-negative.")
 
 
+@dataclass_json
 @dataclass
 class Consumable(CheckBreaksMixin):
     """
@@ -198,6 +207,7 @@ class Consumable(CheckBreaksMixin):
     capacity: int
     breaks: list[Break] = field(default_factory=list)
     name: str = field(default="", kw_only=True)
+    resource_type: str = field(default="Consumable", init=False)
 
     def __post_init__(self, *args, **kwargs):
         super().__post_init__(*args, **kwargs)
@@ -208,6 +218,7 @@ class Consumable(CheckBreaksMixin):
 Resource = Machine | Renewable | Consumable
 
 
+@dataclass_json
 @dataclass
 class Task:
     """
@@ -260,6 +271,7 @@ class Task:
             raise ValueError("earliest_end must be <= latest_end.")
 
 
+@dataclass_json
 @dataclass
 class Mode:
     """
@@ -320,6 +332,7 @@ class IterableMixin:
         return iter(getattr(self, f.name) for f in fields(self))
 
 
+@dataclass_json
 @dataclass
 class StartBeforeStart(IterableMixin):
     """
@@ -335,6 +348,7 @@ class StartBeforeStart(IterableMixin):
     delay: int = 0
 
 
+@dataclass_json
 @dataclass
 class StartBeforeEnd(IterableMixin):
     """
@@ -350,6 +364,7 @@ class StartBeforeEnd(IterableMixin):
     delay: int = 0
 
 
+@dataclass_json
 @dataclass
 class EndBeforeStart(IterableMixin):
     """
@@ -365,6 +380,7 @@ class EndBeforeStart(IterableMixin):
     delay: int = 0
 
 
+@dataclass_json
 @dataclass
 class EndBeforeEnd(IterableMixin):
     """
@@ -380,6 +396,7 @@ class EndBeforeEnd(IterableMixin):
     delay: int = 0
 
 
+@dataclass_json
 @dataclass
 class IdenticalResources(IterableMixin):
     """
@@ -397,6 +414,7 @@ class IdenticalResources(IterableMixin):
     task2: int
 
 
+@dataclass_json
 @dataclass
 class DifferentResources(IterableMixin):
     """
@@ -414,6 +432,7 @@ class DifferentResources(IterableMixin):
     task2: int
 
 
+@dataclass_json
 @dataclass
 class Consecutive(IterableMixin):
     """
@@ -436,6 +455,7 @@ class Consecutive(IterableMixin):
     task2: int
 
 
+@dataclass_json
 @dataclass
 class SameSequence(IterableMixin):
     """
@@ -480,6 +500,7 @@ class SameSequence(IterableMixin):
                 raise ValueError("tasks2 contains duplicate values.")
 
 
+@dataclass_json
 @dataclass
 class SetupTime(IterableMixin):
     """
@@ -510,6 +531,7 @@ class SetupTime(IterableMixin):
             raise ValueError("Setup time must be non-negative.")
 
 
+@dataclass_json
 @dataclass
 class ModeDependency(IterableMixin):
     """
@@ -534,6 +556,7 @@ class ModeDependency(IterableMixin):
             raise ValueError("At least one mode in modes2 must be specified.")
 
 
+@dataclass_json
 @dataclass
 class SelectAllOrNone(IterableMixin):
     """
@@ -547,6 +570,7 @@ class SelectAllOrNone(IterableMixin):
     condition_task: int | None = None
 
 
+@dataclass_json
 @dataclass
 class SelectAtLeastOne(IterableMixin):
     """
@@ -560,6 +584,7 @@ class SelectAtLeastOne(IterableMixin):
     condition_task: int | None = None
 
 
+@dataclass_json
 @dataclass
 class SelectExactlyOne(IterableMixin):
     """
@@ -573,6 +598,7 @@ class SelectExactlyOne(IterableMixin):
     condition_task: int | None = None
 
 
+@dataclass_json
 @dataclass
 class Constraints:
     """
@@ -616,6 +642,7 @@ class Constraints:
         return "\n".join(lines)
 
 
+@dataclass_json
 @dataclass
 class Objective:
     r"""
@@ -696,6 +723,7 @@ class Objective:
         return "\n".join(lines)
 
 
+@dataclass_json
 @dataclass
 class ProblemData:
     """
@@ -719,7 +747,7 @@ class ProblemData:
     """
 
     jobs: list[Job]
-    resources: Sequence[Resource]
+    resources: list[Resource]
     tasks: list[Task]
     modes: list[Mode]
     constraints: Constraints = field(default_factory=Constraints)
@@ -991,7 +1019,7 @@ class ProblemData:
     def replace(
         self,
         jobs: list[Job] | None = None,
-        resources: Sequence[Resource] | None = None,
+        resources: list[Resource] | None = None,
         tasks: list[Task] | None = None,
         modes: list[Mode] | None = None,
         constraints: Constraints | None = None,
@@ -1188,3 +1216,16 @@ ProblemDataDecoder = decoder_factory(
 """
 A decoder class to be used with functions from the `json` module, which can
 decode all ``@dataclass``es specified in this module. """
+
+
+def json2resource(s, *args, **kwargs):
+    resource_type = s.pop("resource_type", None)
+    if resource_type == "Machine":
+        return Machine.from_dict(s, *args, **kwargs)
+    if resource_type == "Renewable":
+        return Renewable.from_dict(s, *args, **kwargs)
+    if resource_type == "Consumable":
+        return Consumable.from_dict(s, *args, **kwargs)
+
+
+dataclasses_json.cfg.global_config.decoders[Resource] = json2resource

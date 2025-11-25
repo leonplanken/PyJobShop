@@ -34,6 +34,8 @@ def build_lawrence_instance() -> Model:
     model = Model()
     jobs = [model.add_job() for _ in range(num_jobs)]
     machines = [model.add_machine() for _ in range(5)]
+    renewables = [model.add_renewable(10) for _ in range(5)]
+    consumables = [model.add_consumable(20) for _ in range(5)]
 
     for job_idx, tasks_data in enumerate(jobs_data):
         num_tasks = len(tasks_data)
